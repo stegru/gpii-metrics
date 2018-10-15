@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define SourceDir="."?>
+  <Module Id="Morphic.FileBeat" Language="1033" Version="1.0.0.0">
+    <Package Id="f01df4e6-be28-4a7a-9e24-ede26d2f052f"
+             Manufacturer="Raising the Floor"
+             InstallerVersion="405"
+             InstallPrivileges="elevated"
+             InstallScope="perMachine" />
+
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="MergeRedirectFolder">
+
+        <Component Id="FilebeatService" Guid="0c9ee128-6c01-443f-9e56-ad8c80492a3b">
+          <File Id="FilebeatServiceExe" Source="filebeat\filebeat.exe" KeyPath="yes" />
+          <File Id="fb1" Source="filebeat\filebeat.yml" />
+          <File Id="fb2" Source="filebeat\README.md" />
+          <File Id="fb3" Source="filebeat\LICENSE.txt" />
+          <File Id="fb4" Source="filebeat\NOTICE.txt" />
+          <File Id="fb5" Source="filebeat\.build_hash.txt" />
+
+          <ServiceInstall Id="FilebeatServiceInstall"
+                          Name="morphic-filebeat"
+                          DisplayName="morphic-filebeat"
+                          Description="Morphic Logging"
+                          ErrorControl="normal"
+                          Start="auto"
+                          Type="ownProcess"
+                          Arguments="-c &quot;[MergeRedirectFolder]filebeat.yml&quot;" />
+
+          <ServiceControl Id="FilebeatServiceControl" Name="morphic-filebeat" Start="install" Stop="both" Remove="both" Wait="yes" />
+        </Component>
+      </Directory>
+    </Directory>
+
+  </Module>
+</Wix>
