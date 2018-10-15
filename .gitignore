@@ -1,0 +1,17 @@
+/node_modules/
+
+Vagrantfile.local
+.vagrant/
+
+.idea/
+.vs/
+
+
+filebeat.msm
+*.wixpdb
+*.wixobj
+filebeat.yml
+es-credentials.json
+
+*/output/
+*/build/
