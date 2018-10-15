@@ -34,3 +34,8 @@ output.elasticsearch:
   username: "<%username%>"
   password: "<%password%>"
   index: "gpii-%{+yyyy.MM.dd}"
+
+setup.template:
+  name: 'gpii'
+  pattern: 'gpii-*'
+  enabled: false

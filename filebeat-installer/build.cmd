@@ -1,3 +1,3 @@
-cd %~dp0
+pushd %~dp0
 powershell -ExecutionPolicy ByPass .\build.ps1
-pause
+popd
