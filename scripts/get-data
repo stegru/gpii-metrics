@@ -1,0 +1,100 @@
+#!/bin/bash
+
+usage() {
+    cat << USAGE
+Gets some data from elastic search, saving to a CSV file.
+
+get-data [URL] DATE FILE
+get-data [URL] --query QUERY
+
+  URL:    https://<user>:<pass>@<host>:9243/
+  DATE:   "today", "yesterday", "this-month", "last-month", or yyyy.mm
+  FILE:   The output csv file.
+  QUERY   Elasticsearch Query DSL
+
+URL is ignored if ~/.metrics-credentials exists, which should contain ES_USER, ES_PASS, and ES_HOST key=value pairs.
+
+es2csv is required.
+
+USAGE
+}
+
+if ! which es2csv >/dev/null; then
+    cat << NO_ES
+es2csv is not found on the PATH. Install with:
+
+    pip install es2csv
+
+See https://github.com/taraslayshchuk/es2csv
+NO_ES
+    exit 1
+fi
+
+if [ -f ~/.metrics-credentials ];then
+    source ~/.metrics-credentials
+    URL="https://$ES_USER:$ES_PASS@$ES_HOST:9243/"
+else
+    URL="$1"
+    shift
+fi
+
+
+if [ $1 == "--query" ]; then
+    QUERY="$2"
+    OUTFILE=$3
+    DATE="*"
+    dateQuery=xx
+    shift
+else
+
+    DATE=$1
+    OUTFILE=$2
+
+    if [ -z $OUTFILE ] || [[ "$*" = *--help* ]]; then
+        usage
+        exit 1
+    fi
+
+    case $DATE in
+        yesterday)
+            dateQuery='now-1d/d'
+            DATE=$(date --date='-1 day' '+%Y.%m.*')
+        ;;
+        today)
+            dateQuery='now/d'
+            DATE=$(date '+%Y.%m.*')
+        ;;
+        this-month)
+            dateQuery='now/M'
+            DATE=$(date '+%Y.%m.*')
+        ;;
+        last-month)
+            dateQuery='now-1M/M'
+            DATE=$(date --date="$(date '+%Y-%m-15') -1 month" '+%Y.%m.*')
+        ;;
+    esac
+fi
+
+if [ -z $dateQuery ]; then
+    QUERY='*'
+else
+    if [ -z "$QUERY" ]; then
+        QUERY=$(cat  <<QUERY
+        {
+            "query": {
+                "match_phrase": {
+                    "@timestamp": {
+                        "query": "$dateQuery"
+                    }
+                }
+            }
+        }
+QUERY
+        )
+    fi
+    QUERY=$(echo "$QUERY" | tr '\n' ' ' | sed -re 's,\s+, ,g')
+fi
+
+set -x
+es2csv --verify-certs -u "$URL" -s 10000 -i "gpii-$DATE" -r -q "$QUERY" -o "$OUTFILE"
+

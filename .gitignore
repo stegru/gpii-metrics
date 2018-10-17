@@ -13,5 +13,7 @@ filebeat.msm
 filebeat.yml
 es-credentials.json
 
-*/output/
-*/build/
+output/
+build/
+*.csv
+
